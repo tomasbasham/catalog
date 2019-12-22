@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: kaniko
+spec:
+  inputs:
+    params:
+    - name: dockerfile
+      description: Path to the dockerfile to build.
+      type: string
+      default: ./Dockerfile
+    - name: context
+      description: Build context used by Kaniko (https://github.com/GoogleContainerTools/kaniko#kaniko-build-contexts).
+      type: string
+      default: ./
+    - name: args
+      description: Extra arguments for kaniko.
+      type: string
+      default: ""
+    - name: builder-image
+      description: Image on which builds will run.
+      type: string
+      default: gcr.io/kaniko-project/executor:v0.14.0
+    resources:
+    - name: source
+      type: git
+  outputs:
+    resources:
+    - name: image
+      type: image
+  steps:
+  - name: build
+    workingdir: /workspace/source
+    image: $(inputs.params.builder-image)
+    # specifying DOCKER_CONFIG is required to allow kaniko to detect docker
+    # credentials https://github.com/tektoncd/pipeline/pull/706
+    env:
+    - name: "DOCKER_CONFIG"
+      value: "/builder/home/.docker/"
+    command:
+    - /kaniko/executor
+    args:
+    - $(inputs.params.args)
+    - --dockerfile=$(inputs.params.dockerfile)
+    - --context=$(inputs.params.context)
+    - --destination=$(outputs.resources.image.url)
+    securityContext:
+      runAsUser: 0
