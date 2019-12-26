@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: test-and-build
+spec:
+  resources:
+  - name: source-repo
+    type: git
+  - name: docker-image
+    type: image
+  tasks:
+  - name: test-source
+    taskRef:
+      name: hello-golang
+    resources:
+      inputs:
+      - name: source
+        resource: source-repo
+  - name: build-docker-image
+    taskRef:
+      name: kaniko
+    resources:
+      inputs:
+      - name: source # Name of the task input resource.
+        resource: source-repo # Name of the pipeline resource.
+      outputs:
+      - name: image # Name of the task output resource.
+        resource: docker-image # Name of the pipeline resource.
+    # params:
+    # - name: args
+    #   value: |
+    #     --label org.label-schema.build-date=$(date -Is)
+    #     --label org.label-schema.name="Blunderlist Gateway API"
+    #     --label org.label-schema.description="Go API backend for the Blunderlist Frontend"
+    #     --label org.label-schema.url="https://blunderlist.com"
+    #     --label org.label-schema.vcs-url="https://github.com/tomasbasham/blunderlist-gateway/"
+    #     --label org.label-schema.vcs-ref="$COMMIT_SHA"
+    #     --label org.label-schema.vendor="Tomas Basham"
+    #     --label org.label-schema.version="$TAG_NAME"
+    #     --label org.label-schema.schema-version="1.0"

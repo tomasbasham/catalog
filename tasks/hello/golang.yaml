@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: hello-golang
+spec:
+  inputs:
+    params:
+    - name: greeting
+      description: Greeting to print.
+      type: string
+      default: Hello
+    - name: builder-image
+      description: Image on which builds will run.
+      type: string
+      default: alpine:3.11.2
+    resources:
+    - name: source
+      type: git
+  steps:
+  - name: build
+    workingdir: /workspace/source
+    image: $(inputs.params.builder-image)
+    command:
+    - echo
+    args:
+    - $(inputs.params.args), Golang
